@@ -1,0 +1,23 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+numpy = "*"
+scipy = "*"
+tqdm = "*"
+opencv-python = "*"
+torchvision = "*"
+rope = "*"
+adabound = "*"
+pytorch-lightning-bolts = "*"
+matplotlib = "*"
+pytorch-lightning = "==0.10.0"
+open3d = "*"
+pillow = "*"
+
+[requires]
+python_version = "3.8"
