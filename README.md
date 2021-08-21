@@ -1,5 +1,6 @@
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/deca-deep-viewpoint-equivariant-human-pose/pose-estimation-on-itop-top-view)](https://paperswithcode.com/sota/pose-estimation-on-itop-top-view?p=deca-deep-viewpoint-equivariant-human-pose)
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/deca-deep-viewpoint-equivariant-human-pose/pose-estimation-on-itop-front-view)](https://paperswithcode.com/sota/pose-estimation-on-itop-front-view?p=deca-deep-viewpoint-equivariant-human-pose)
+[![arXiv](https://img.shields.io/badge/arXiv-2108.08557-00ff00.svg)](https://arxiv.org/abs/2108.08557)
 
 # DECA
 Official code for the ICCV 2021 paper "DECA: Deep viewpoint-Equivariant human pose estimation using Capsule Autoencoders".
