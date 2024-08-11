@@ -6,7 +6,7 @@ import torch
 import torchvision
 from torch import nn
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 import warnings
 import capspose_flags
 import numpy as np
@@ -33,43 +33,74 @@ def init_all():
 def main(argv):
     init_all()
     print("Capsules architecture: ", FLAGS.arch)
+    checkpoint_callback = ModelCheckpoint(
+        monitor='Training/loss',
+        dirpath=FLAGS.checkpoint_dir,
+        filename='DECA_2.3.3_TEST-{epoch:02d}-{train_loss:.2f}',
+        save_top_k=5,
+        save_last=True,
+        mode='min'
+    )
 
+    early_stop_callback = EarlyStopping(
+        monitor='Validation/loss',
+        min_delta=0.05,
+        patience=4,
+        verbose=True,
+        mode='min',
+    )
     if FLAGS.mode == "train":
         dm = CapsulePoseDataModule(FLAGS)
         model = CapsulePose(FLAGS)
         if(FLAGS.resume_training):
-            trainer = pl.Trainer(gpus=1, distributed_backend=None, resume_from_checkpoint=os.path.join(
-                os.getcwd(), FLAGS.load_checkpoint_dir), max_epochs=10000)
+            trainer = pl.Trainer(
+                accelerator="gpu",
+                devices=1,
+                max_epochs=FLAGS.n_epochs,
+                callbacks=[early_stop_callback, checkpoint_callback]
+            )
+            trainer.fit(model, dm, ckpt_path=FLAGS.load_checkpoint_dir)
         else:
-            trainer = pl.Trainer(gpus=1, distributed_backend=None, max_epochs=10000)
-        trainer.fit(model, dm)
+            trainer = pl.Trainer(
+                accelerator="gpu",
+                devices=1,
+                max_epochs=FLAGS.n_epochs,
+                callbacks=[early_stop_callback, checkpoint_callback]
+                )
+            trainer.fit(model, dm)
+        
     elif FLAGS.mode == "test":
         # Create modules
         dm = CapsulePoseDataModule(FLAGS)
         model = CapsulePose(FLAGS)
-        model = model.load_from_checkpoint(os.path.join(
+        model = CapsulePose.load_from_checkpoint(os.path.join(
                 os.getcwd(), FLAGS.load_checkpoint_dir), FLAGS=FLAGS)
         model.configure_optimizers()
 
         # Manually run prep methods on DataModule
         dm.prepare_data()
-        dm.setup()
+        dm.setup('test')
 
         # Run test on validation dataset
-        trainer = pl.Trainer(gpus=1, distributed_backend=None, resume_from_checkpoint=os.path.join(
-                os.getcwd(), FLAGS.load_checkpoint_dir), max_epochs=10000)
-        trainer.test(model, test_dataloaders=dm.val_dataloader())
+        trainer = pl.Trainer(
+            accelerator='gpu',
+            devices=1,
+            max_epochs=10000,
+        )
+
+        trainer.test(model, ckpt_path=FLAGS.load_checkpoint_dir, dataloaders=dm.val_dataloader())
         print(np.array(model.features).shape)
-        np.save('output/features', np.array(model.features))
+        #make sure path exists
+        np.save(os.path.join('../output', 'features'), np.array(model.features))
         
     elif FLAGS.mode == "demo":
         model = CapsulePose(FLAGS)
-        model = model.load_from_checkpoint(os.path.join(
+        model = CapsulePose.load_from_checkpoint(os.path.join(
                 os.getcwd(), FLAGS.load_checkpoint_dir), FLAGS=FLAGS)
         model.configure_optimizers()
         model = model.cuda()
 
-        eval_image(model)
+        eval_image(model, FLAG=FLAGS)
 
 
 if __name__ == '__main__':

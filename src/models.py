@@ -272,7 +272,6 @@ class CapsulePose(pl.LightningModule):
         # viewpoint = "top"
         # save_3d_plot(labels['msk'], "gt_depth", display_labels=True, viewpoint=viewpoint)
         # save_3d_plot(yhat3D.cpu().detach().numpy(), "pred_depth", viewpoint=viewpoint)
-
         self.log('Test/loss', loss)
         self.log('Test/loss2D', loss2D)
         self.log('Test/loss3D', loss3D)
@@ -510,33 +509,38 @@ def calc_MPJPE(pred_or, gt_or, procrustes_transform=True):
             d, Z, tform = procrustes(gt[i], pred[i])
             pred[i] = Z
 
-    err_dist = np.sqrt(np.sum((pred - gt)**2, axis=2)) * 100
+    """
+    old code returned tuples of ndarray but self.log requires tensors now so here is being
+    converted to tensors and taking the average value for MPJPE
+    """
+
+    err_dist = torch.tensor(np.sqrt(np.sum((pred - gt)**2, axis=2)) * 100).mean()
         
-    err_dist_neck = np.sqrt(np.sum((pred[:,[0],:] - gt[:,[0],:])**2, axis=2)) * 100
+    err_dist_neck = torch.tensor(np.sqrt(np.sum((pred[:,[0],:] - gt[:,[0],:])**2, axis=2)) * 100).mean()
         
-    err_dist_nose = np.sqrt(np.sum((pred[:,[1],:] - gt[:,[1],:])**2, axis=2)) * 100
+    err_dist_nose = torch.tensor(np.sqrt(np.sum((pred[:,[1],:] - gt[:,[1],:])**2, axis=2)) * 100).mean()
         
-    err_dist_bodycenter = np.sqrt(np.sum((pred[:,[2],:] - gt[:,[2],:])**2, axis=2)) * 100
+    err_dist_bodycenter = torch.tensor(np.sqrt(np.sum((pred[:,[2],:] - gt[:,[2],:])**2, axis=2)) * 100).mean()
         
-    err_dist_shoulders = np.sqrt(np.sum((pred[:,[3,9],:] - gt[:,[3,9],:])**2, axis=2)) * 100
+    err_dist_shoulders = torch.tensor(np.sqrt(np.sum((pred[:,[3,9],:] - gt[:,[3,9],:])**2, axis=2)) * 100).mean()
         
-    err_dist_elbows = np.sqrt(np.sum((pred[:,[4,10],:] - gt[:,[4,10],:])**2, axis=2)) * 100
+    err_dist_elbows = torch.tensor(np.sqrt(np.sum((pred[:,[4,10],:] - gt[:,[4,10],:])**2, axis=2)) * 100).mean()
         
-    err_dist_wrists = np.sqrt(np.sum((pred[:,[5,11],:] - gt[:,[5,11],:])**2, axis=2)) * 100
+    err_dist_wrists = torch.tensor(np.sqrt(np.sum((pred[:,[5,11],:] - gt[:,[5,11],:])**2, axis=2)) * 100).mean()
         
-    err_dist_hips = np.sqrt(np.sum((pred[:,[6,12],:] - gt[:,[6,12],:])**2, axis=2)) * 100
+    err_dist_hips = torch.tensor(np.sqrt(np.sum((pred[:,[6,12],:] - gt[:,[6,12],:])**2, axis=2)) * 100).mean()
         
-    err_dist_knees = np.sqrt(np.sum((pred[:,[7,13],:] - gt[:,[7,13],:])**2, axis=2)) * 100
+    err_dist_knees = torch.tensor(np.sqrt(np.sum((pred[:,[7,13],:] - gt[:,[7,13],:])**2, axis=2)) * 100).mean()
         
-    err_dist_ankles = np.sqrt(np.sum((pred[:,[8,14],:] - gt[:,[8,14],:])**2, axis=2))* 100
+    err_dist_ankles = torch.tensor(np.sqrt(np.sum((pred[:,[8,14],:] - gt[:,[8,14],:])**2, axis=2))* 100).mean()
         
-    err_dist_eyes = np.sqrt(np.sum((pred[:,[15,17],:] - gt[:,[15,17],:])**2, axis=2)) * 100
+    err_dist_eyes = torch.tensor(np.sqrt(np.sum((pred[:,[15,17],:] - gt[:,[15,17],:])**2, axis=2)) * 100).mean()
         
-    err_dist_ears = np.sqrt(np.sum((pred[:,[16,18],:] - gt[:,[16,18],:])**2, axis=2)) * 100
+    err_dist_ears = torch.tensor(np.sqrt(np.sum((pred[:,[16,18],:] - gt[:,[16,18],:])**2, axis=2)) * 100).mean()
         
-    err_dist_upper_body = np.sqrt(np.sum((pred[:,[0,1,2,3,4,5,9,10,11,15,16,17,18],:] - gt[:,[0,1,2,3,4,5,9,10,11,15,16,17,18],:])**2, axis=2)) * 100
+    err_dist_upper_body = torch.tensor(np.sqrt(np.sum((pred[:,[0,1,2,3,4,5,9,10,11,15,16,17,18],:] - gt[:,[0,1,2,3,4,5,9,10,11,15,16,17,18],:])**2, axis=2)) * 100).mean()
         
-    err_dist_lower_body = np.sqrt(np.sum((pred[:,[6,7,8,12,13,14],:] - gt[:,[6,7,8,12,13,14],:])**2, axis=2))  * 100
+    err_dist_lower_body = torch.tensor(np.sqrt(np.sum((pred[:,[6,7,8,12,13,14],:] - gt[:,[6,7,8,12,13,14],:])**2, axis=2))  * 100).mean()
 
     return err_dist, err_dist_neck, err_dist_nose, err_dist_bodycenter, \
         err_dist_shoulders, err_dist_elbows, err_dist_wrists, err_dist_hips, \

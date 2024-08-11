@@ -15,9 +15,10 @@ rope = "*"
 adabound = "*"
 pytorch-lightning-bolts = "*"
 matplotlib = "*"
-pytorch-lightning = "==0.10.0"
+pytorch-lightning = "*"
 open3d = "*"
 pillow = "*"
+absl-py = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.11.9"

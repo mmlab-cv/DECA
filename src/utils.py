@@ -328,10 +328,11 @@ def plot_skeletons(FLAGS, fig, images_orig, links, preds_2D, gts_2D, preds_3D, g
     return angle
 
 
-def eval_image(model):
-    viewpoint = "top"
+def eval_image(model, FLAG):
+    viewpoint = FLAG.dataset
+    dataset_dir = FLAG.dataset_dir
     sample = "05_00000000_rear"
-    image = cv2.imread("/media/disi/New Volume/Datasets/PANOPTIC_CAPS/"+viewpoint+"/train/"+ sample +".png")
+    image = cv2.imread(dataset_dir + viewpoint + "/train/" + sample + ".png")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     transform = transforms.Compose([
             transforms.ToPILImage(),
@@ -342,16 +343,17 @@ def eval_image(model):
     # image_tensor = image_tensor.permute(0,3,1,2)
     input = torch.autograd.Variable(image_tensor)
     input = input.cuda()
-    input = torch.cat(128*[input])
+    batch_size = FLAG.batch_size
+    input = torch.cat(batch_size*[input])
     print("INPUT SHAPE: ", input.shape)
     yhat2D, yhat3D, yhatD, W_reg, _ = model(input)
 
     itop_labels = ['Head','Neck','LShould','RShould',"LElbow","RElbow","LHand","RHand","Torso","LHip","RHip","LKnee","RKnee","LFoot","RFoot"]
     
     import gzip
-    msk3D = np.load("/media/disi/New Volume/Datasets/PANOPTIC_CAPS/"+viewpoint+"/train/"+sample+".npy")
+    msk3D = np.load(dataset_dir + viewpoint + "/train/" + sample + ".npy")
     msk3D = torch.from_numpy(msk3D).float().unsqueeze(0).unsqueeze(-1)
-    msk3D = torch.cat(128*[msk3D]) / 100.
+    msk3D = torch.cat(batch_size*[msk3D]) / 100.
     msk3D = center_skeleton(msk3D)
     msk3D = discretize(msk3D, 0, 1)
     print(msk3D.shape)
